@@ -224,7 +224,7 @@ This represents a rich research direction that bridges fundamental mathematics (
 
 ---
 
-**Starting Discussion Points**:
+**Discussion Points**:
 1. What's your intuition about harmonic mean behavior in RL?
 2. Which applications might benefit most from conservative (harmonic) vs aggressive (arithmetic) approaches?
 3. How might the recursive arithmetic-harmonic iteration property be useful algorithmically?
