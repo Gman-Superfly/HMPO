@@ -6,6 +6,12 @@
 A modest exploration of mean types in reinforcement learning policy optimization.
 ==============================
 
+FYI this is for fun, because GSPO is the convergence point,
+"natural balance" between arithmetic and harmonic
+so I have no idea how this will play out practically
+ie: thought excercise which will have code example
+
+
 ## Background
 
 While working with recent RL algorithms like GRPO and GSPO, I noticed an interesting mathematical pattern:
