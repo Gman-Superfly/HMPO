@@ -27,6 +27,8 @@ Harmonic Mean:    M_H = n / Σ(1/x_i)                     [p = -1, conservative]
 M_H ≤ M_G ≤ M_A
 ```
 
+**NOTE: TO BE EXPLORED** - In policy optimization, importance ratios undergo sequence length normalization which may affect this classical inequality. The relationship between mean types after normalization requires theoretical analysis to understand how different scaling factors impact the mathematical ordering.
+
 ### 1.2 Power Mean Unification
 
 All three means are special cases of the **Power Mean**:

@@ -190,9 +190,15 @@ class PowerMeanTrainer:
         Raises:
             PowerMeanError: If computation fails
         """
+        # Enhanced input validation
         assert policy_logprobs.shape == ref_logprobs.shape, "Shape mismatch in log probabilities"
         assert policy_logprobs.shape[0] == response_lengths.shape[0], "Batch size mismatch"
         assert torch.all(response_lengths > 0), "Invalid response lengths"
+        assert not torch.any(torch.isnan(policy_logprobs)), "NaN in policy log probabilities"
+        assert not torch.any(torch.isnan(ref_logprobs)), "NaN in reference log probabilities"
+        assert not torch.any(torch.isinf(policy_logprobs)), "Inf in policy log probabilities"
+        assert not torch.any(torch.isinf(ref_logprobs)), "Inf in reference log probabilities"
+        assert torch.all(response_lengths <= 10000), "Unreasonably large response lengths detected"
         
         mean_type = mean_type or self.config.mean_type
         power_p = self.power_param if hasattr(self, 'power_param') else self.config.power_p
@@ -215,8 +221,10 @@ class PowerMeanTrainer:
             # HMPO: Harmonic mean of ratios
             # |y| / Σ(π_θ_old/π_θ) = |y| / Σ(1/(π_θ/π_θ_old))
             ratios = torch.exp(log_ratios)  # π_θ/π_θ_old
-            inverse_ratios = 1.0 / (ratios + 1e-8)  # Numerical stability
-            harmonic_mean = response_lengths.float() / torch.sum(inverse_ratios, dim=0, keepdim=True)
+            # Adaptive epsilon based on tensor dtype for numerical stability
+            eps = 1e-8 if ratios.dtype == torch.float32 else 1e-4
+            inverse_ratios = 1.0 / (ratios + eps)  # Numerical stability
+            harmonic_mean = response_lengths.float() / torch.sum(inverse_ratios)
             importance_ratios = harmonic_mean.expand_as(ratios)
             
         elif mean_type == 'power':
@@ -262,16 +270,28 @@ class PowerMeanTrainer:
         
         # Initialize with arithmetic and harmonic means
         arithmetic = ratios / response_lengths.float()  # GRPO
-        harmonic_denom = response_lengths.float() / torch.sum(1.0 / (ratios + 1e-8), dim=0, keepdim=True)
+        # Fix: Remove incorrect dim=0 parameter - harmonic mean computed per sequence
+        eps = 1e-8 if ratios.dtype == torch.float32 else 1e-4
+        harmonic_denom = response_lengths.float() / torch.sum(1.0 / (ratios + eps))
         harmonic = harmonic_denom.expand_as(ratios)
         
-        # AGM iteration
+        # AGM iteration with edge case handling
         for i in range(self.config.agm_iterations):
+            # Edge case: Check for very small values that could cause numerical issues
+            if torch.any(arithmetic + harmonic < 1e-10):
+                # Values too small for reliable AGM computation
+                break
+                
             new_arithmetic = (arithmetic + harmonic) / 2.0
-            new_harmonic = 2.0 * arithmetic * harmonic / (arithmetic + harmonic + 1e-8)
+            new_harmonic = 2.0 * arithmetic * harmonic / (arithmetic + harmonic + eps)
             
-            # Check convergence
+            # Check convergence with bounds validation
             if torch.allclose(new_arithmetic, new_harmonic, rtol=1e-6):
+                break
+            
+            # Edge case: Check for NaN or Inf values
+            if torch.any(torch.isnan(new_arithmetic)) or torch.any(torch.isnan(new_harmonic)):
+                # Numerical instability detected - stop iteration
                 break
                 
             arithmetic = new_arithmetic

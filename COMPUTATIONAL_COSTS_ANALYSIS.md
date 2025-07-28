@@ -56,13 +56,14 @@ importance_ratios = harmonic_mean.expand_as(ratios)
 
 **Operations per element**:
 - 1 × Exponential (`torch.exp`)
-- 1 × Addition (`ratios + 1e-8`)
+- 1 × Type cast (`response_lengths.float()`)
+- 1 × Addition (`ratios + eps`)
 - 1 × Reciprocal (`1.0 / ...`)
 - 1 × Sum reduction (`torch.sum`)
 - 1 × Division (`response_lengths / ...`)
 - 1 × Broadcast (`expand_as`)
 
-**Total**: 6 operations + 3 intermediate tensors
+**Total**: 7 operations + 3 intermediate tensors
 
 **Characteristics**:
 - ❌ Most operations per element
@@ -122,7 +123,7 @@ for i in range(agm_iterations):
 |-----------|----------------------|------------|--------|
 | **Geometric** | 2 | O(n) | Most efficient |
 | **Arithmetic** | 2 | O(n) | Simple |
-| **Harmonic** | 6 | O(n) | 3× operation overhead |
+| **Harmonic** | 7 | O(n) | 3.5× operation overhead |
 | **Power** | 6 | O(n) | Depends on power value |
 | **AGM** | ~38 | O(n × k) | k = iterations |
 
