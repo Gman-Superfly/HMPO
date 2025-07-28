@@ -3,7 +3,9 @@
 [Under construction check back in a week or two]
 
 ==============================
+
 A modest exploration of mean types in reinforcement learning policy optimization.
+
 ==============================
 
 FYI this is for fun, because GSPO is the convergence point,
