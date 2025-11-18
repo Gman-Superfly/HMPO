@@ -283,26 +283,26 @@ def agm_adaptive_training(policy, ref, optimizer, prompts, reward_fn, iterations
 
 ## 7. Implementation Roadmap
 
-### Phase 1: Core Implementation (Week 1-2)
+### Phase 1: Core Implementation 
 - [x] Basic HMPO implementation
 - [x] Power Mean framework
 - [x] AGM adaptive optimizer
-- [ ] Comprehensive test suite
+- [x] Comprehensive test suite (pytest coverage + demo runner with UTF-8 guidance)
 
-### Phase 2: Validation (Week 3-4)
-- [ ] Mathematical property verification
-- [ ] Small-scale comparative experiments
-- [ ] Gradient analysis and stability tests
+### Phase 2: Validation 
+- [ ] Mathematical property verification on real tasks (power sweeps, mean inequality telemetry)
+- [ ] Small-scale comparative experiments (GSPO vs HMPO using plan in `docs/EXPERIMENT_PLAN.md`)
+- [ ] Gradient analysis and stability tests (log MuonClip activity, QK spikes)
 
-### Phase 3: Scaling (Week 5-6)
+### Phase 3: Scaling 
 - [ ] Integration with HuggingFace transformers
 - [ ] Large-scale benchmark evaluation
-- [ ] Multi-GPU distributed training
+- [ ] Multi-GPU/distributed training (ensure MuonClip hooks aggregate cross-device metrics)
 
-### Phase 4: Research (Week 7-8)
+### Phase 4: Research 
 - [ ] Theoretical analysis publication
-- [ ] Open-source release
-- [ ] Community evaluation and feedback
+- [ ] Open-source release announcement + usage guide
+- [ ] Community evaluation and feedback (share results + AGM controller integration progress)
 
 ## 8. Expected Impact and Applications
 
@@ -337,7 +337,15 @@ def agm_adaptive_training(policy, ref, optimizer, prompts, reward_fn, iterations
 - Task-adaptive mean selection
 - Population-based mean evolution
 
-## 9. Conclusion
+## 9. Current Implementation Status
+
+- **Shared infrastructure**: HMPO and GSPO now share vectorized sampling/log-prob utilities, keeping behavior aligned between mean variants.
+- **Stability tooling**: The default optimizer path wraps MuonClip, which monitors per-batch Q·K/√dₖ scores and rescales attention projections as needed—mirroring the activation-based qk-clip used in Kimi K2.
+- **Documentation**: `README.md` and `docs/SYSTEM_OVERVIEW.md` summarize the architecture, MuonClip rationale, and cross-repo relationship with the AGM project (`https://github.com/Gman-Superfly/AGM_Training`).
+- **Testing**: `pytest` now covers the HMPO/Power Mean trainer logic, while `test_hmpo_demo.py` offers a scriptable demonstration (run via `python -X utf8 test_hmpo_demo.py` on Windows).
+- **Experiment plan**: `docs/EXPERIMENT_PLAN.md` outlines how we will gather empirical evidence—metrics include reward curves, advantage variance, QK clipping frequency, and AGM telemetry for adaptive controllers.
+
+## 10. Conclusion
 
 The introduction of **Harmonic Mean Policy Optimization (HMPO)** completes a fundamental mathematical progression in reinforcement learning algorithms. By providing the conservative counterpart to aggressive arithmetic means and balanced geometric means, HMPO enables:
 
@@ -353,3 +361,4 @@ The connection to classical mathematics (AGM algorithm, mean inequalities) provi
 ---
 
 *This research represents the a systematic exploration of mean choice in policy optimization and introduces the implementation of harmonic mean importance sampling for training.* 
+

@@ -52,7 +52,7 @@ Each encodes different risk preferences:
 
 - `algorithms/gspo_vectorized.py` - Vendored GSPO implementation (baseline)
 - `rl_core/sampling.py` - Shared vectorized sampling and log-prob utilities
-- `HARMONIC_MEAN_RL_EXPLORATION_THOUGHTS.md` - Original research notes
+- `docs/HARMONIC_MEAN_RL_EXPLORATION_THOUGHTS.md` - Original research notes
 
 ## Quickstart (Windows PowerShell)
 
