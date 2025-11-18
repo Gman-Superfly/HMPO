@@ -360,5 +360,5 @@ The connection to classical mathematics (AGM algorithm, mean inequalities) provi
 
 ---
 
-*This research represents the a systematic exploration of mean choice in policy optimization and introduces the implementation of harmonic mean importance sampling for training.* 
+*This research represents the a an exploration of mean choice in policy optimization and introduces harmonic mean importance sampling for training.* 
 
