@@ -349,11 +349,9 @@ class TestHarmonicMeanOptimization:
         policy_model, ref_model = create_test_models()
         config = PowerMeanConfig(mean_type='power', power_p=0.0, learnable_p=True)
         
-        trainer = PowerMeanTrainer(
-            policy_model, ref_model,
-            optim.Adam(list(policy_model.parameters()) + [trainer.power_param], lr=1e-4),
-            config, mock_reward_function
-        )
+        # Optimizer on policy params; learnable power parameter is created by trainer
+        optimizer = optim.Adam(policy_model.parameters(), lr=1e-4)
+        trainer = PowerMeanTrainer(policy_model, ref_model, optimizer, config, mock_reward_function)
         
         # Check that power parameter is learnable
         assert hasattr(trainer, 'power_param'), "Learnable power param not created"
@@ -366,6 +364,15 @@ class TestHarmonicMeanOptimization:
         assert isinstance(trainer.power_param, nn.Parameter), "Power param not a Parameter"
         
         print("✅ Learnable power parameter - PASSED")
+
+    def test_imports_available(self):
+        """Smoke-check shared utils and vendored GSPO are importable."""
+        from rl_core.sampling import compute_log_probs_batch, sample_responses_batch
+        from algorithms.gspo_vectorized import GSPOConfig
+        assert callable(compute_log_probs_batch)
+        assert callable(sample_responses_batch)
+        cfg = GSPOConfig()
+        assert cfg.validate(), "GSPOConfig should validate with defaults"
 
 def run_comparative_analysis():
     """Run comparative analysis of different mean types."""

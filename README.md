@@ -50,9 +50,45 @@ Each encodes different risk preferences:
 
 ## Files
 
-- `gspo_vectorized.py` - Fixed implementation of GSPO (baseline)
-- `GSPO_IMPLEMENTATION_SUMMARY.md` - Documentation of GSPO fixes
-- `HARMONIC_MEAN_RL_EXPLORATION_PROMPT.md` - Original research notes
+- `algorithms/gspo_vectorized.py` - Vendored GSPO implementation (baseline)
+- `rl_core/sampling.py` - Shared vectorized sampling and log-prob utilities
+- `HARMONIC_MEAN_RL_EXPLORATION_THOUGHTS.md` - Original research notes
+
+## Quickstart (Windows PowerShell)
+
+```powershell
+python -m pip install -r requirements.txt
+python .\test_hmpo_demo.py
+pytest -q
+```
+
+Notes:
+- Ensure `eos_token` != `pad_token` in configs.
+- HMPO and GSPO now live in this repo; no external repos required.
+
+## Using MuonClip (QK-clip)
+
+You can wrap any optimizer with our MuonClip wrapper to stabilize attention QK scores during training (inspired by Kimi K2’s MuonClip qk-clip).
+
+```python
+from optimizers.muon_clip import MuonClip, MuonClipConfig
+import torch
+
+optimizer = torch.optim.AdamW(policy_model.parameters(), lr=1e-4)
+optimizer = MuonClip(optimizer, MuonClipConfig(max_qk_score=100.0, verbose=True))
+
+loss.backward()
+optimizer.step(model=policy_model)  # pass the model so MuonClip can find q/k projections
+optimizer.zero_grad()
+```
+
+By default it searches for query/key linear layers named `q_proj/k_proj`, `W_q/W_k`, `query/key`, or `q/k` and proportionally rescales them when an estimated max QK score exceeds the threshold.
+
+### Activation-based MuonClip
+
+Our MuonClip wrapper now monitors the **per-batch max QK score** via forward hooks on attention projections. This mirrors the activation-based qk-clip used in Kimi K2 [Fireworks blog](https://fireworks.ai/blog/muonclip). When the live Q·K/√dₖ value exceeds `max_qk_score`, it rescales the offending `W_q/W_k` pair; otherwise it stays inert. If hooks cannot be registered, it falls back to the earlier weight-norm estimate.
+
+See `docs/SYSTEM_OVERVIEW.md` for a full architectural overview and reproducibility notes.
 
 ## Key Insight
 

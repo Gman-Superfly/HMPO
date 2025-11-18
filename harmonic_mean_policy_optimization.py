@@ -20,6 +20,11 @@ from torch.distributions import Categorical
 from typing import List, Dict, Tuple, Callable, Optional, Literal
 import math
 
+from rl_core.sampling import (
+    compute_log_probs_batch as _rl_compute_log_probs_batch,
+    sample_responses_batch as _rl_sample_responses_batch,
+)
+
 __all__ = [
     'PowerMeanConfig', 'HMPOConfig', 'PowerMeanTrainer', 'HMPOTrainer',
     'harmonic_mean_policy_optimization', 'power_mean_policy_optimization',
@@ -152,6 +157,15 @@ class PowerMeanTrainer:
         self.optimizer = optimizer
         self.config = config
         self.reward_fn = reward_fn
+
+        # Default to MuonClip wrapper if available and not already wrapped
+        try:
+            from optimizers.muon_clip import MuonClip, MuonClipConfig  # type: ignore
+            if not isinstance(self.optimizer, MuonClip):
+                self.optimizer = MuonClip(self.optimizer, MuonClipConfig())
+        except Exception:
+            # If MuonClip is unavailable, continue with provided optimizer
+            pass
         
         # Initialize learnable power parameter if requested
         if config.learnable_p:
@@ -401,8 +415,12 @@ class PowerMeanTrainer:
         
         # Gradient clipping for stability
         torch.nn.utils.clip_grad_norm_(self.policy_model.parameters(), max_norm=1.0)
-        
-        self.optimizer.step()
+
+        # Support MuonClip(step(model=...)) with fallback to standard step()
+        try:
+            self.optimizer.step(model=self.policy_model)
+        except TypeError:
+            self.optimizer.step()
         
         # Compute metrics
         with torch.no_grad():
@@ -431,16 +449,25 @@ class PowerMeanTrainer:
     
     def _sample_responses_batch(self, prompts: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Sample responses using reference model (vectorized)."""
-        # Implementation similar to GSPO but with additional validation
-        # ... (implementation details similar to gspo_vectorized.py)
-        pass
+        responses, lengths, full_sequences = _rl_sample_responses_batch(
+            ref_model=self.ref_model,
+            prompts=prompts,
+            group_size=self.config.group_size,
+            max_length=self.config.max_length,
+            eos_token=self.config.eos_token,
+            pad_token=self.config.pad_token,
+        )
+        return responses, lengths, full_sequences
     
     def _compute_log_probs_batch(self, model: nn.Module, full_sequences: torch.Tensor, 
                                 prompt_length: int, response_lengths: torch.Tensor) -> torch.Tensor:
         """Compute log probabilities for sequences."""
-        # Implementation similar to GSPO but with additional validation
-        # ... (implementation details similar to gspo_vectorized.py)
-        pass
+        return _rl_compute_log_probs_batch(
+            model=model,
+            full_sequences=full_sequences,
+            prompt_length=prompt_length,
+            response_lengths=response_lengths,
+        )
 
 class HMPOTrainer(PowerMeanTrainer):
     """Specialized trainer for Harmonic Mean Policy Optimization."""
