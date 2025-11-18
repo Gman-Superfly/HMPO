@@ -65,6 +65,7 @@ pytest -q
 Notes:
 - Ensure `eos_token` != `pad_token` in configs.
 - HMPO and GSPO now live in this repo; no external repos required.
+- On Windows terminals that don’t default to UTF-8, use `python -X utf8 <script>` to avoid emoji-related encoding errors in the demo output.
 
 ## Using MuonClip (QK-clip)
 
@@ -89,6 +90,10 @@ By default it searches for query/key linear layers named `q_proj/k_proj`, `W_q/W
 Our MuonClip wrapper now monitors the **per-batch max QK score** via forward hooks on attention projections. This mirrors the activation-based qk-clip used in Kimi K2 [Fireworks blog](https://fireworks.ai/blog/muonclip). When the live Q·K/√dₖ value exceeds `max_qk_score`, it rescales the offending `W_q/W_k` pair; otherwise it stays inert. If hooks cannot be registered, it falls back to the earlier weight-norm estimate.
 
 See `docs/SYSTEM_OVERVIEW.md` for a full architectural overview and reproducibility notes.
+
+### AGM Adaptive Framework (External)
+
+The detailed research and pseudocode for AGM-driven adaptation (hyperparameters, curriculum, early stopping, etc.) lives in the companion repository [AGM_Training](https://github.com/Gman-Superfly/AGM_Training). In this repo we summarize the concepts and expose the metrics needed for those controllers, while keeping the full implementation centralized in AGM_Training to avoid divergence.
 
 ## Key Insight
 

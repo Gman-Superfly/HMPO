@@ -11,7 +11,11 @@ import numpy as np
 from typing import Dict, List
 
 # Test basic configuration imports
-def test_basic_imports():
+# NOTE: The following helper functions are intended for manual execution in
+# `run_all_tests()` and are not meant to be collected by PyTest. They are
+# prefixed with `demo_` to avoid the `test_` discovery pattern.
+
+def demo_basic_imports():
     """Test that we can import our implementations."""
     print("🧪 Testing basic imports...")
     
@@ -20,12 +24,11 @@ def test_basic_imports():
             PowerMeanConfig, HMPOConfig, PowerMeanTrainer, HMPOTrainer
         )
         print("✅ Successfully imported all classes")
-        return True
     except ImportError as e:
         print(f"❌ Import failed: {e}")
-        return False
+        raise
 
-def test_configuration_setup():
+def demo_configuration_setup():
     """Test configuration setup for different mean types."""
     print("\n🧪 Testing configuration setup...")
     
@@ -50,9 +53,9 @@ def test_configuration_setup():
         assert config.validate(), f"{name} config should be valid"
         print(f"✅ {name.capitalize()} Config: mean_type={config.mean_type}, power_p={config.power_p}")
     
-    return True
+    return None
 
-def test_importance_ratio_mathematics():
+def demo_importance_ratio_mathematics():
     """Test the mathematical properties of importance ratio computation."""
     print("\n🧪 Testing importance ratio mathematics...")
     
@@ -123,9 +126,9 @@ def test_importance_ratio_mathematics():
     else:
         print("⚠️ Mean inequality may be violated (could be due to randomness)")
     
-    return True
+    return None
 
-def test_power_mean_framework():
+def demo_power_mean_framework():
     """Test the unified power mean framework."""
     print("\n🧪 Testing power mean framework...")
     
@@ -179,9 +182,9 @@ def test_power_mean_framework():
     print("   Lower powers (negative) → more conservative")
     print("   Higher powers (positive) → more aggressive")
     
-    return True
+    return None
 
-def test_agm_convergence():
+def demo_agm_convergence():
     """Test AGM (Arithmetic-Geometric Mean) convergence."""
     print("\n🧪 Testing AGM convergence...")
     
@@ -224,9 +227,9 @@ def test_agm_convergence():
         assert len(trainer.agm_state['geometric_history']) > 0, "AGM history not populated"
     
     print("   AGM iterations successfully converging toward geometric mean")
-    return True
+    return None
 
-def demonstrate_mean_properties():
+def demo_mean_properties():
     """Demonstrate the mathematical properties of different means."""
     print("\n🔬 Demonstrating Mean Properties")
     print("=" * 50)
@@ -261,7 +264,7 @@ def demonstrate_mean_properties():
     print(f"   Converged to:      {(a+h)/2:.6f}")
     print(f"   ✅ AGM successfully converges to geometric mean!")
     
-    return True
+    return None
 
 def run_all_tests():
     """Run all tests and demonstrations."""
@@ -269,12 +272,12 @@ def run_all_tests():
     print("=" * 60)
     
     tests = [
-        test_basic_imports,
-        test_configuration_setup,
-        test_importance_ratio_mathematics,
-        test_power_mean_framework,
-        test_agm_convergence,
-        demonstrate_mean_properties
+        demo_basic_imports,
+        demo_configuration_setup,
+        demo_importance_ratio_mathematics,
+        demo_power_mean_framework,
+        demo_agm_convergence,
+        demo_mean_properties
     ]
     
     passed = 0
@@ -282,10 +285,11 @@ def run_all_tests():
     
     for test in tests:
         try:
-            if test():
-                passed += 1
-            else:
+            result = test()
+            if result is False:
                 print(f"❌ {test.__name__} failed")
+            else:
+                passed += 1
         except Exception as e:
             print(f"❌ {test.__name__} failed with error: {e}")
     

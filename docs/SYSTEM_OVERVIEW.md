@@ -70,7 +70,42 @@ For end-to-end RL experiments, replace the dummy reward/model in `test_harmonic_
 - When creating new attention modules, expose `q_proj/k_proj` attributes so MuonClip hooks them without extra configuration.
 - Always call `optimizer.step(model=your_model)` if you bypass the trainers.
 
-## 7. External References
+## 7. AGM Adaptive Framework Reference
+
+The long-form research on using AGM convergence signals for adaptive training lives in the companion repository **AGM_Training**: [https://github.com/Gman-Superfly/AGM_Training](https://github.com/Gman-Superfly/AGM_Training).
+
+AGM’s arithmetic-versus-harmonic gap, convergence rate, and oscillation patterns act as rich telemetry for training control: they reveal when optimization is stable, struggling, or plateaued, and can therefore drive learning-rate schedules, curriculum state machines, and early-stopping triggers. We keep the full reference implementations and pseudocode in `AGM_Training`, while this repo exposes the metrics and context required to plug them in.
+
+### Why this matters in HMPO
+- AGM convergence rate (|A-H| gap) can drive **hyperparameter schedules** (learning rate, clipping windows, batch size) via the `AdaptiveAGMController` and `AGMHyperparameterAdapter` classes described in the AGM repo.
+- **Phase-aware mean selection** (`TrainingPhaseAdaptiveAGM`) decides when to lean on arithmetic vs. harmonic vs. AGM-adaptive ratios based on loss trends and convergence stability—this will inform future extensions of `PowerMeanTrainer`.
+- **Multi-scale tracking** (`MultiScaleAGMFramework`) feeds short/medium/long-term adaptation decisions, which pairs naturally with our MuonClip-stabilized trainers to detect instability early.
+- Modules such as `AGMCurriculumController`, `AGMConvergenceDetector`, and `AGMUncertaintyEstimator` outline curriculum progression, early stopping, and uncertainty estimation pipelines that can consume HMPO metrics without code duplication.
+
+### Key modules available in AGM_Training
+- **AdaptiveAGMController**: consumes arithmetic/harmonic histories to compute convergence-rate signals and recommend AGM iteration counts.
+- **TrainingPhaseAdaptiveAGM + TrainingPhaseDetector**: ingest loss history + convergence rate to classify phases (exploration/exploitation/instability/plateau) and emit mean-selection strategies.
+- **AGMHyperparameterAdapter**: takes convergence speed, mean spread, and stability to output learning-rate, epsilon, batch-size, and AGM-iteration multipliers.
+- **MultiScaleAGMFramework**: keeps short/medium/long-term trackers of convergence metrics and returns immediate/tactical/strategic adaptation suggestions.
+- **AGMCurriculumController**: combines convergence rate with success metrics to decide when to advance, regress, or consolidate curriculum difficulty levels.
+- **AGMConvergenceDetector**: monitors convergence histories plus performance metrics to trigger early stopping (full convergence, plateau, instability).
+- **AGMUncertaintyEstimator**: turns spread/oscillation data into epistemic + aleatoric uncertainty estimates for downstream decision making.
+
+### Integration plan (future work)
+1. **Expose trainer metrics**: extend `PowerMeanTrainer` to log `arithmetic_history`, `harmonic_history`, reward means/variances, and MuonClip stability flags so AGM controllers have the required inputs.
+2. **Iterative mean selection**: plug `TrainingPhaseAdaptiveAGM` into the mean-type choice (arithmetic/geometric/harmonic/power) to automatically shift risk profiles as training evolves.
+3. **Adaptive schedules**: feed convergence telemetry into `AGMHyperparameterAdapter` to auto-adjust LR, clipping epsilon, and group size during HMPO runs.
+4. **Curriculum + early stop**: wire `AGMCurriculumController` and `AGMConvergenceDetector` to long-form training scripts so curriculum progression and termination leverage the same AGM signals.
+5. **Documentation & tests**: mirror the implementation roadmap from `AGM_ADAPTIVE_PROPERTIES.md` (Phases 1–4) and create examples showing HMPO ↔ AGM module integration.
+
+### How to use this information here
+1. Implement or import the controller classes from `AGM_Training` when you need adaptive behavior; the HMPO repo stays focused on the core optimizer mechanics.
+2. When extending HMPO, emit the convergence histories and metrics those controllers expect (`arithmetic_history`, `harmonic_history`, reward trends, etc.).
+3. Document cross-repo dependencies: add a note in your experiments pointing to the corresponding section in `AGM_ADAPTIVE_PROPERTIES.md` so humans/LLMs know where to find the full pseudocode and roadmap.
+
+Keeping the heavy AGM logic in its own repo avoids duplication while making the intent clear for anyone building adaptive systems on top of HMPO.
+
+## 8. External References
 
 - Fireworks AI MuonClip blog post (qk-clip) – rationale for activation-based clipping.
 - Kimi K2 Instruct model card – example of MuonClip applied at scale.
