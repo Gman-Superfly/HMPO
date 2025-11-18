@@ -1,6 +1,6 @@
 # Harmonic Mean Policy Optimization (HMPO)
 
-[Under construction check back in a week or two]
+[Under construction getting there woop]
 
 ==============================
 
@@ -8,10 +8,10 @@ A modest exploration of mean types in reinforcement learning policy optimization
 
 ==============================
 
-FYI this is for fun, because GSPO is the convergence point,
+FYI, because GSPO is the convergence point,
 "natural balance" between arithmetic and harmonic
 so I have no idea how this will play out practically
-ie: thought excercise which will have code example
+ie: thought excercises which will have code examples
 
 
 ## Background
