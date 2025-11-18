@@ -352,4 +352,4 @@ The connection to classical mathematics (AGM algorithm, mean inequalities) provi
 
 ---
 
-*This research represents the first systematic exploration of mean choice in policy optimization and introduces the only known implementation of harmonic mean importance sampling for language model training.* 
+*This research represents the a systematic exploration of mean choice in policy optimization and introduces the implementation of harmonic mean importance sampling for training.* 
